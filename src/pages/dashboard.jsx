@@ -19,10 +19,20 @@ function Dashboard() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
   const [activeTask, setActiveTask] = useState(null)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth)
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
   )
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  const isMobile = windowWidth < 640
 
   useEffect(() => {
     if (user) loadTasks()
@@ -96,21 +106,39 @@ function Dashboard() {
 
   const getTasksByStatus = (status) => tasks.filter(t => t.status === status)
 
-return (
+  return (
     <div style={{minHeight:'100vh',background:'#f0f2ff'}}>
       <Toaster />
-      <header style={{background:'linear-gradient(135deg,#667eea,#764ba2)',padding:'0.75rem 1rem',display:'flex',justifyContent:'space-between',alignItems:'center',boxShadow:'0 4px 20px rgba(102,126,234,0.4)'}}>
-        <h1 style={{color:'white',fontSize:'1.5rem',fontWeight:'800',margin:0}}>🗂️ KanbanFlow</h1>
+
+      <header style={{background:'linear-gradient(135deg,#667eea,#764ba2)',padding:isMobile?'0.75rem 1rem':'1rem 2rem',display:'flex',justifyContent:'space-between',alignItems:'center',boxShadow:'0 4px 20px rgba(102,126,234,0.4)'}}>
+        <h1 style={{color:'white',fontSize:isMobile?'1.1rem':'1.5rem',fontWeight:'800',margin:0}}>🗂️ KanbanFlow</h1>
         <div style={{display:'flex',alignItems:'center',gap:'1rem'}}>
-         <span style={{color:'rgba(255,255,255,0.85)',fontSize:'0.85rem',maxWidth:'150px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{user?.email}</span>
-          <button onClick={handleLogout}
-            style={{background:'rgba(255,255,255,0.2)',color:'white',border:'1px solid rgba(255,255,255,0.3)',padding:'0.4rem 1rem',borderRadius:'20px',cursor:'pointer',fontSize:'0.85rem',fontWeight:'600'}}>
-            Logout
-          </button>
+          {!isMobile && (
+            <>
+              <span style={{color:'rgba(255,255,255,0.85)',fontSize:'0.85rem',maxWidth:'150px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{user?.email}</span>
+              <button onClick={handleLogout} style={{background:'rgba(255,255,255,0.2)',color:'white',border:'1px solid rgba(255,255,255,0.3)',padding:'0.4rem 1rem',borderRadius:'20px',cursor:'pointer',fontSize:'0.85rem',fontWeight:'600'}}>
+                Logout
+              </button>
+            </>
+          )}
+          {isMobile && (
+            <button onClick={()=>setMenuOpen(!menuOpen)} style={{background:'none',border:'none',color:'white',fontSize:'1.5rem',cursor:'pointer'}}>
+              {menuOpen ? '✕' : '☰'}
+            </button>
+          )}
         </div>
       </header>
 
-      <div style={{padding:'1.5rem 2rem'}}>
+      {isMobile && menuOpen && (
+        <div style={{background:'#764ba2',padding:'0.75rem 1rem',display:'flex',flexDirection:'column',gap:'0.5rem'}}>
+          <span style={{color:'rgba(255,255,255,0.85)',fontSize:'0.85rem'}}>{user?.email}</span>
+          <button onClick={handleLogout} style={{background:'rgba(255,255,255,0.2)',color:'white',border:'1px solid rgba(255,255,255,0.3)',padding:'0.4rem 1rem',borderRadius:'20px',cursor:'pointer',fontSize:'0.85rem',fontWeight:'600',width:'fit-content'}}>
+            Logout
+          </button>
+        </div>
+      )}
+
+      <div style={{padding:isMobile?'1rem':'1.5rem 2rem'}}>
         <button onClick={()=>{setEditingTask(null);setModalOpen(true)}}
           style={{background:'linear-gradient(135deg,#667eea,#764ba2)',color:'white',border:'none',padding:'0.7rem 1.5rem',borderRadius:'12px',cursor:'pointer',fontSize:'0.95rem',fontWeight:'700',boxShadow:'0 4px 15px rgba(102,126,234,0.4)'}}>
           + Add Task
@@ -121,13 +149,13 @@ return (
         <div style={{textAlign:'center',padding:'4rem',color:'#667eea',fontSize:'1.1rem'}}>Loading tasks...</div>
       ) : (
         <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-          <div style={{padding:'0 1rem 2rem',display:'flex',gap:'1.5rem',overflowX:'auto'}}>
-  {COLUMNS.map(col => (
-    <div key={col} style={{minWidth:'280px',flex:'0 0 auto'}}>
-      <TaskColumn id={col} tasks={getTasksByStatus(col)} onEdit={handleEdit} onDelete={handleDelete}/>
-    </div>
-  ))}
-</div>
+          <div style={{padding:isMobile?'0 1rem 2rem':'0 2rem 2rem',display:'flex',flexDirection:isMobile?'column':'row',gap:'1.5rem',overflowX:isMobile?'visible':'auto'}}>
+            {COLUMNS.map(col => (
+              <div key={col} style={{width:isMobile?'100%':'auto',minWidth:isMobile?'unset':'280px',flex:isMobile?'unset':'0 0 auto'}}>
+                <TaskColumn id={col} tasks={getTasksByStatus(col)} onEdit={handleEdit} onDelete={handleDelete}/>
+              </div>
+            ))}
+          </div>
           <DragOverlay>
             {activeTask ? <TaskCard task={activeTask} onEdit={()=>{}} onDelete={()=>{}}/> : null}
           </DragOverlay>
@@ -140,4 +168,5 @@ return (
     </div>
   )
 }
+
 export default Dashboard
