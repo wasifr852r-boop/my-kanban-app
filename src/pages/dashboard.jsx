@@ -99,10 +99,10 @@ function Dashboard() {
 return (
     <div style={{minHeight:'100vh',background:'#f0f2ff'}}>
       <Toaster />
-      <header style={{background:'linear-gradient(135deg,#667eea,#764ba2)',padding:'1rem 2rem',display:'flex',justifyContent:'space-between',alignItems:'center',boxShadow:'0 4px 20px rgba(102,126,234,0.4)'}}>
+      <header style={{background:'linear-gradient(135deg,#667eea,#764ba2)',padding:'0.75rem 1rem',display:'flex',justifyContent:'space-between',alignItems:'center',boxShadow:'0 4px 20px rgba(102,126,234,0.4)'}}>
         <h1 style={{color:'white',fontSize:'1.5rem',fontWeight:'800',margin:0}}>🗂️ KanbanFlow</h1>
         <div style={{display:'flex',alignItems:'center',gap:'1rem'}}>
-          <span style={{color:'rgba(255,255,255,0.85)',fontSize:'0.85rem'}}>{user?.email}</span>
+         <span style={{color:'rgba(255,255,255,0.85)',fontSize:'0.85rem',maxWidth:'150px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{user?.email}</span>
           <button onClick={handleLogout}
             style={{background:'rgba(255,255,255,0.2)',color:'white',border:'1px solid rgba(255,255,255,0.3)',padding:'0.4rem 1rem',borderRadius:'20px',cursor:'pointer',fontSize:'0.85rem',fontWeight:'600'}}>
             Logout
@@ -121,11 +121,13 @@ return (
         <div style={{textAlign:'center',padding:'4rem',color:'#667eea',fontSize:'1.1rem'}}>Loading tasks...</div>
       ) : (
         <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-          <div style={{padding:'0 2rem 2rem',display:'flex',gap:'1.5rem',overflowX:'auto'}}>
-            {COLUMNS.map(col => (
-              <TaskColumn key={col} id={col} tasks={getTasksByStatus(col)} onEdit={handleEdit} onDelete={handleDelete}/>
-            ))}
-          </div>
+          <div style={{padding:'0 1rem 2rem',display:'flex',gap:'1.5rem',overflowX:'auto'}}>
+  {COLUMNS.map(col => (
+    <div key={col} style={{minWidth:'280px',flex:'0 0 auto'}}>
+      <TaskColumn id={col} tasks={getTasksByStatus(col)} onEdit={handleEdit} onDelete={handleDelete}/>
+    </div>
+  ))}
+</div>
           <DragOverlay>
             {activeTask ? <TaskCard task={activeTask} onEdit={()=>{}} onDelete={()=>{}}/> : null}
           </DragOverlay>
