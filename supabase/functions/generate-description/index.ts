@@ -26,8 +26,13 @@ serve(async (req) => {
     )
 
     const data = await response.json()
-    if (data.error) throw new Error(data.error.message)
-    const text = data.candidates[0].content.parts[0].text
+console.log('Gemini response:', JSON.stringify(data))
+
+if (!data.candidates || !data.candidates[0]) {
+  throw new Error(data.error?.message || 'Gemini returned no candidates: ' + JSON.stringify(data))
+}
+
+const text = data.candidates[0].content.parts[0].text
 
     return new Response(JSON.stringify({ text }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
