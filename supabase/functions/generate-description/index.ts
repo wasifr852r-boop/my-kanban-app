@@ -12,27 +12,32 @@ serve(async (req) => {
 
   try {
     const { title } = await req.json()
-    const apiKey = Deno.env.get('GEMINI_API_KEY')
+    const apiKey = Deno.env.get('GROQ_API_KEY')
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: `Write a short professional task description in 2-3 sentences for: "${title}". Be concise and actionable.` }] }]
-        })
-      }
-    )
+    if (!apiKey) throw new Error('GROQ_API_KEY is not set')
+
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: 'llama-3.1-8b-instant',
+        messages: [{
+          role: 'user',
+          content: `Write a short professional task description in 2-3 sentences for a task titled: "${title}". Be concise and actionable. Only return the description, nothing else.`
+        }],
+        max_tokens: 150,
+        temperature: 0.7
+      })
+    })
 
     const data = await response.json()
-console.log('Gemini response:', JSON.stringify(data))
 
-if (!data.candidates || !data.candidates[0]) {
-  throw new Error(data.error?.message || 'Gemini returned no candidates: ' + JSON.stringify(data))
-}
+    if (data.error) throw new Error(data.error.message)
 
-const text = data.candidates[0].content.parts[0].text
+    const text = data.choices[0].message.content.trim()
 
     return new Response(JSON.stringify({ text }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
